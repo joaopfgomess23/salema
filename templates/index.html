@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <title>Salema</title>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="https://unpkg.com/vue-demi"></script>
+    <script src="https://unpkg.com/pinia@2.0.34/dist/pinia.iife.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js"></script>
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>[v-cloak] { display: none; }</style>
+</head>
+<body>
+    <div id="app" v-cloak> <div id="mesa">
+            <div id="cartas-na-mesa">
+                <div v-for="item in gameStore.mesa" 
+                     :key="item[0]" 
+                     :class="['card-mesa', 'card-p' + item[0], gameStore.getSuitColor(item[1])]">
+                    <span class="rank">${ gameStore.getRank(item[1]) }</span>
+                    <span class="suit">${ gameStore.getSuitSymbol(item[1]) }</span>
+                </div>
+            </div>
+            
+            <div class="info-centro">
+                <p>Vaza ${ gameStore.vaza } / 10</p>
+                <p v-if="gameStore.hearts_broken">💔 Copas Abertas</p>
+            </div>
+        </div>
+
+        <div class="user-interface">
+            <div class="placar-ronda">
+                <div v-for="(pts, idx) in gameStore.pontosRonda" :key="idx" class="placar-item">
+                    <span>${ idx == 0 ? 'Tu' : 'Bot ' + idx }</span>
+                    <span>${ pts }</span>
+                </div>
+            </div>
+
+            <div class="mao">
+                <div v-for="(carta, index) in gameStore.mao" 
+                    :key="index"
+                    :class="['card', gameStore.getSuitColor(carta), { 'disabled': !gameStore.jogaveis.includes(index) }]"
+                    @click="gameStore.playCard(index)"> <span class="card-rank">${ gameStore.getRank(carta) }</span>
+                    <span class="card-suit">${ gameStore.getSuitSymbol(carta) }</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='game.js') }}"></script>
+</body>
+</html>

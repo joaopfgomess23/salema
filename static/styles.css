@@ -1,0 +1,98 @@
+/* 1. Configurações Gerais */
+body {
+    background-color: #0a1f12;
+    margin: 0;
+    padding: 0;
+    font-family: 'Segoe UI', Roboto, sans-serif;
+    color: white;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    height: 100vh;
+}
+
+/* 2. Contentor da Mesa */
+#mesa {
+    position: relative;
+    /* Mantém a proporção exata da foto (Largura / Altura) */
+    aspect-ratio: 1792 / 1891; 
+    
+    /* Define a altura como base para ser responsivo no ecrã */
+    height: 80vh; 
+    max-height: 600px; 
+    width: auto; /* A largura será calculada automaticamente pela proporção */
+    
+    margin: 20px auto;
+    
+    background-image: url('mesa.png'); 
+    background-size: 100% 100%; 
+    background-position: center;
+    background-repeat: no-repeat;
+    
+    border: 12px solid #3e2723;
+    border-radius: 40px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+    overflow: hidden;
+}
+
+/* 3. Cartas na Mesa */
+.card-mesa {
+    position: absolute;
+    width: 80px;
+    height: 115px;
+    background: white;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+    color: black;
+}
+
+.card-p0 { bottom: 40px; left: 50%; transform: translateX(-50%); }
+.card-p1 { left: 60px; top: 50%; transform: translateY(-50%) rotate(90deg); }
+.card-p2 { top: 40px; left: 50%; transform: translateX(-50%); }
+.card-p3 { right: 60px; top: 50%; transform: translateY(-50%) rotate(-90deg); }
+
+.red { color: #d32f2f !important; }
+.black { color: #1a1a1a !important; }
+
+/* 4. Interface e Mão */
+.user-interface {
+    position: fixed;
+    bottom: 20px;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.mao {
+    display: flex;
+    gap: 10px;
+}
+
+.card {
+    width: 75px;
+    height: 110px;
+    background: white;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-around;
+    cursor: pointer;
+    color: black;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+}
+
+.card.disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: translateY(20px);
+}
+
+[v-cloak] { display: none; }
