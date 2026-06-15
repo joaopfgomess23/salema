@@ -9,16 +9,26 @@
     "preview": "vite preview",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "server": "tsx watch server/index.ts",
+    "server:start": "tsx server/index.ts",
+    "online": "concurrently -n servidor,cliente -c green,cyan \"npm:server\" \"npm:dev\"",
+    "typecheck:server": "tsc -p tsconfig.server.json",
+    "check": "npm run typecheck && npm run typecheck:server && npm run test"
   },
   "dependencies": {
+    "colyseus": "0.15.57",
+    "colyseus.js": "0.15.28",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react-dom": "^18.3.1",
+    "tsx": "^4.22.4",
+    "@colyseus/ws-transport": "^0.15.1"
   },
   "devDependencies": {
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.4",
+    "concurrently": "^10.0.3",
     "typescript": "^5.6.3",
     "vite": "^5.4.11",
     "vitest": "^2.1.8"

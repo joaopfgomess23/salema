@@ -9,9 +9,9 @@ const SUIT_SYMBOL: Record<Suit, string> = {
 
 const RANK_LABEL: Record<string, string> = {
   A: 'A',
-  K: 'K', // Rei
-  J: 'J', // Valete
-  Q: 'Q', // Dama
+  K: 'R', // Rei
+  J: 'V', // Valete
+  Q: 'D', // Dama
   '7': '7',
   '6': '6',
   '5': '5',
