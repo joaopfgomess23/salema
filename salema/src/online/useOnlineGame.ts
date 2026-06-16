@@ -1,17 +1,23 @@
 import { useCallback, useRef, useState } from 'react';
 import { Client, Room } from 'colyseus.js';
-import { GameView, LobbyView, ServerMessage } from '../shared/protocol';
+import { GameView, LobbyView, ServerMessage, GameMode } from '../shared/protocol';
 
 const DEFAULT_URL = import.meta.env?.VITE_SERVER_URL || 'ws://localhost:2567';
 
 export type OnlineStatus = 'idle' | 'connecting' | 'lobby' | 'playing' | 'ended' | 'error';
+
+export interface ConnectOptions {
+  mode: GameMode;
+  name?: string; // casual
+  token?: string; // ranked
+}
 
 export interface UseOnlineGame {
   status: OnlineStatus;
   lobby: LobbyView | null;
   view: GameView | null;
   error: string | null;
-  connect: (name: string) => Promise<void>;
+  connect: (opts: ConnectOptions) => Promise<void>;
   start: () => void;
   play: (cardId: string) => void;
   leave: () => void;
@@ -31,12 +37,14 @@ export function useOnlineGame(): UseOnlineGame {
   }, []);
 
   const connect = useCallback(
-    async (name: string) => {
+    async ({ mode, name, token }: ConnectOptions) => {
       setError(null);
       setStatus('connecting');
       try {
         const client = new Client(DEFAULT_URL);
-        const room = await client.joinOrCreate('salema', { name });
+        const roomName = mode === 'ranked' ? 'salema_ranked' : 'salema';
+        const options = mode === 'ranked' ? { token } : { name };
+        const room = await client.joinOrCreate(roomName, options);
         roomRef.current = room;
 
         room.onMessage('view', (msg: ServerMessage) => {

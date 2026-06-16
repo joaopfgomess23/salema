@@ -17,14 +17,20 @@
     "check": "npm run typecheck && npm run typecheck:server && npm run test"
   },
   "dependencies": {
+    "@colyseus/ws-transport": "^0.15.1",
+    "bcryptjs": "^3.0.3",
     "colyseus": "0.15.57",
     "colyseus.js": "0.15.28",
+    "jsonwebtoken": "^9.0.3",
+    "pg": "^8.21.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "tsx": "^4.22.4",
-    "@colyseus/ws-transport": "^0.15.1"
+    "tsx": "^4.22.4"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/pg": "^8.20.0",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.4",

@@ -20,13 +20,24 @@ todos os que tiverem 100 ou mais**.
 - **Modo offline em React** (`src/ui/`) — mesa com os 5 lugares, a tua mão em baixo, a vazada ao
   centro, revisão da vazada anterior a qualquer momento, e ecrãs de fim de mão e de fim de jogo.
 - **Modo online** — servidor **autoritativo** em Node + **Colyseus** (`server/`) que corre o mesmo
-  motor, com lobby público, preenchimento com bots até 5, e uma **vista filtrada por jogador** (só
-  vês a tua mão; as dos outros aparecem como contagem). O cliente online em React está em
-  `src/online/`. Se um humano se desligar a meio, o lugar passa a ser jogado por um bot.
+  motor, com lobby público e uma **vista filtrada por jogador** (só vês a tua mão; as dos outros
+  aparecem como contagem). O cliente online em React está em `src/online/`.
+- **Dois submodos online:**
+  - **Casual** — entras já; os lugares vazios são preenchidos por bots até 5. **Não conta** para
+    estatísticas. Se um humano se desligar a meio, o lugar passa a ser jogado por um bot.
+  - **Ranked** — exige **5 jogadores reais com sessão iniciada** (sem bots); começa
+    automaticamente quando os 5 estiverem na sala. **Só este modo** conta para estatísticas e
+    ranking. Em caso de queda, há uma janela para reentrar antes de a partida deixar de contar.
+- **Contas** (`server/auth.ts`) — registo e início de sessão, *password* com *hash* (**bcrypt**) e
+  *token* **JWT**. **8 testes a passar** (29 no total).
+- **Estatísticas e ranking** (só ranked) — jogos, derrotas (chegar a 100), média de pontos por
+  jogo, Salemas (Q♠ apanhadas) e luas. O ranking ordena pela **taxa de vitórias** (jogos em que não
+  perdeste), com a média de pontos como desempate.
+- **Persistência atrás de uma interface** (`server/storage/`) — adaptador **Postgres** (ex. Neon)
+  em produção e **em memória** em desenvolvimento/testes. O servidor escolhe automaticamente
+  conforme exista `DATABASE_URL`.
 
-> **Fase seguinte (ainda por construir):** contas (nome + id + password com *hash*) e
-> **estatísticas** guardadas em **Postgres** (ex. Neon). O modo online já está preparado para as
-> receber.
+> **Modo offline:** joga-se tudo no dispositivo e **nunca** conta para estatísticas.
 
 ---
 
@@ -115,7 +126,27 @@ node server/__smoke__/online-smoke.mjs
   fornece a porta na variável `PORT` — o servidor já a respeita. Comando de arranque sugerido:
   `npm run server:start`. (No plano gratuito o servidor "adormece" quando está inativo e demora
   ~1 min a acordar no primeiro acesso.)
-- **Base de dados** → só será precisa na fase das contas/estatísticas: **Neon** (Postgres, *free*).
+- **Base de dados** → **Neon** (Postgres, *free*), necessária para contas, estatísticas e ranking.
+
+### Variáveis de ambiente
+
+| Onde | Variável | Valor |
+| --- | --- | --- |
+| Cloudflare (frontend) | `VITE_SERVER_URL` | `wss://<o-teu-servidor>.onrender.com` |
+| Render (backend) | `DATABASE_URL` | a *connection string* do Neon (ver abaixo) |
+| Render (backend) | `JWT_SECRET` | uma frase secreta e longa, à tua escolha |
+
+> Sem `DATABASE_URL`, o servidor arranca à mesma mas guarda tudo **em memória** (apaga ao reiniciar) —
+> útil para testar, mas as contas/estatísticas **não persistem**. Define-a para usares o Neon a sério.
+> Define **sempre** o `JWT_SECRET` em produção (senão é usado um segredo de desenvolvimento).
+
+### Pôr o Neon a funcionar (uma vez)
+
+1. Cria conta em **neon.tech** e um projeto novo (Postgres).
+2. Copia a **connection string** (algo como `postgresql://utilizador:senha@host/db?sslmode=require`).
+3. No Render, em *Environment*, adiciona `DATABASE_URL` com esse valor e `JWT_SECRET` com uma frase à
+   tua escolha. Faz *deploy* de novo.
+4. As tabelas são criadas automaticamente no primeiro arranque — não tens de correr nada à mão.
 
 O modo **offline** continua a poder ser publicado sozinho em qualquer alojamento estático, sem
 servidor nem base de dados.

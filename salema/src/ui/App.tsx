@@ -42,7 +42,7 @@ function Menu({ onOffline, onOnline }: { onOffline: () => void; onOnline: () => 
           Jogar online (com amigos)
         </button>
         <p className="setup__note">
-          Offline joga-se tudo no teu dispositivo. Online liga-se a um servidor e regista estatísticas.
+          Offline joga-se tudo no teu dispositivo. No Online, só o modo Ranked conta para as estatísticas.
         </p>
       </div>
     </div>

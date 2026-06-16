@@ -35,18 +35,23 @@ export interface PlayerView {
   handPoints: number;
 }
 
+export type GameMode = 'casual' | 'ranked';
+
 /** Enviado enquanto a sala está no lobby (antes do jogo começar). */
 export interface LobbyView {
   type: 'lobby';
+  mode: GameMode;
   players: { name: string; isBot: boolean }[];
   yourSeat: number;
   canStart: boolean;
+  minPlayers: number; // nº de humanos necessários para começar (1 casual, 5 ranked)
   started: boolean;
 }
 
 /** Vista do jogo, já filtrada para um jogador específico. */
 export interface GameView {
   type: 'state';
+  mode: GameMode;
   yourSeat: number;
   phase: 'playing' | 'handComplete' | 'matchComplete';
   players: PlayerView[];

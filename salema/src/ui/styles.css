@@ -611,3 +611,94 @@ body {
   font-size: 0.85rem;
   opacity: 0.7;
 }
+
+/* ===================== Fase B — contas, modos, ranking ===================== */
+
+.setup__card--wide { max-width: 640px; }
+
+/* Caixa de conta no submenu online */
+.account {
+  margin: 6px 0 18px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(217, 164, 65, 0.18);
+}
+.account__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.account__hi { color: var(--text); font-size: 0.95rem; }
+.account__hi strong { color: var(--gold); }
+.account__stats { margin: 8px 0 0; color: var(--muted); font-size: 0.86rem; }
+.account__out { color: var(--muted); }
+
+/* Cartões de modo (Casual / Ranked / Classificação) */
+.home__modes { display: grid; gap: 12px; margin: 8px 0 18px; }
+.modecard {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: left;
+  padding: 14px 16px;
+  border-radius: 14px;
+  cursor: pointer;
+  color: var(--text);
+  background: rgba(20, 50, 38, 0.75);
+  border: 1px solid rgba(217, 164, 65, 0.25);
+  transition: transform 0.12s, border-color 0.15s, background 0.15s;
+}
+.modecard:hover { transform: translateY(-1px); border-color: var(--gold); background: rgba(28, 84, 64, 0.9); }
+.modecard__title { font-family: var(--display); font-size: 1.2rem; color: var(--gold); }
+.modecard__desc { color: var(--muted); font-size: 0.86rem; line-height: 1.35; }
+.modecard--ranked { border-color: rgba(127, 214, 168, 0.45); }
+.modecard--ranked .modecard__title { color: #7fd6a8; }
+.modecard--ghost { background: rgba(0, 0, 0, 0.22); }
+
+/* Separadores entrar / criar conta */
+.auth__tabs { display: flex; gap: 6px; margin: 4px 0 14px; }
+.auth__tab {
+  flex: 1;
+  padding: 9px 0;
+  border-radius: 10px;
+  cursor: pointer;
+  color: var(--muted);
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid transparent;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.auth__tab--on {
+  color: var(--ink);
+  background: var(--gold);
+  border-color: var(--gold);
+  font-weight: 600;
+}
+
+/* Tabela de classificação */
+.rank__wrap { overflow-x: auto; margin: 6px 0 2px; }
+.rank {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+  color: var(--text);
+}
+.rank thead th {
+  color: var(--gold);
+  font-weight: 600;
+  text-align: center;
+  padding: 8px 6px;
+  border-bottom: 1px solid rgba(217, 164, 65, 0.3);
+  white-space: nowrap;
+}
+.rank tbody td {
+  text-align: center;
+  padding: 7px 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+.rank__left { text-align: left !important; }
+.rank__me { background: rgba(217, 164, 65, 0.14); }
+.rank__me td { color: var(--gold); font-weight: 600; }
+.rank__note { color: var(--muted); font-size: 0.78rem; margin: 12px 0 4px; line-height: 1.4; }
