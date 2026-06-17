@@ -227,8 +227,11 @@ export function playCard(state: GameState, card: Card): GameState {
     { leader: state.trickLeader, plays: currentTrick, winner },
   ];
 
-  // Ainda há vazadas por jogar nesta mão.
-  if (state.trickNumber < TRICKS_PER_HAND) {
+  // Ainda há vazadas por jogar nesta mão — exceto se já não restarem pontos.
+  // Quando nenhuma mão tem Copas nem a Dama de Espadas, o resultado já está
+  // decidido: fecha-se a mão e pontua-se, sem jogar as vazadas sem pontos.
+  const noPointsLeft = !hands.some((h) => h.some(isPointCard));
+  if (state.trickNumber < TRICKS_PER_HAND && !noPointsLeft) {
     return {
       ...state,
       hands,
@@ -243,7 +246,7 @@ export function playCard(state: GameState, card: Card): GameState {
     };
   }
 
-  // Última vazada da mão: pontuar.
+  // Última vazada da mão (ou já não há pontos em jogo): pontuar.
   return scoreHand({
     ...state,
     hands,

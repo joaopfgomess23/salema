@@ -1,15 +1,21 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { GameTable } from './GameTable';
 import { useGame } from './useGame';
 import { OnlineGame } from '../online/OnlineGame';
+import { hasPendingReconnect } from '../online/useOnlineGame';
 
 const BOT_NAMES = ['Bummy', 'Pisca', 'Bumaro', 'FF'];
 
 type Screen = 'menu' | 'offline' | 'online';
 
 export function App() {
-  const [screen, setScreen] = useState<Screen>('menu');
+  const [screen, setScreen] = useState<Screen>(() => (hasPendingReconnect() ? 'online' : 'menu'));
   const [names, setNames] = useState<string[] | null>(null);
+
+  // Se ficou uma partida a meio (queda/refresh), entra logo no Online para retomar.
+  useEffect(() => {
+    if (hasPendingReconnect()) setScreen('online');
+  }, []);
 
   if (screen === 'online') {
     return <OnlineGame onExit={() => setScreen('menu')} />;
@@ -67,7 +73,7 @@ function Setup({ onStart, onBack }: { onStart: (you: string) => void; onBack: ()
           className="setup__input"
           value={name}
           maxLength={16}
-          placeholder="Ex.: Bummy"
+          placeholder="Ex.: Leca"
           onChange={(e) => setName(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter' && trimmed) onStart(trimmed); }}
           autoFocus

@@ -20,6 +20,7 @@ import {
   CompletedTrickView,
   TrickPlayView,
   GameMode,
+  ChatPayload,
 } from '../src/shared/protocol';
 import { verifyToken } from './auth';
 import { Storage, MatchPlayerResult } from './storage';
@@ -29,13 +30,13 @@ const BOT_DELAY_MS = Number(process.env.SALEMA_BOT_DELAY ?? 750);
 const TRICK_PAUSE_MS = Number(process.env.SALEMA_TRICK_PAUSE ?? 1400);
 const HAND_REVIEW_MS = Number(process.env.SALEMA_HAND_REVIEW ?? 4500);
 const RECONNECT_SECONDS = Number(process.env.SALEMA_RECONNECT ?? 60);
+const TURN_LIMIT_MS = Number(process.env.SALEMA_TURN_LIMIT ?? 10000); // só ranked
+const OPENING_DELAY_MS = Number(process.env.SALEMA_OPENING_DELAY ?? 500);
 const BOT_POOL = ['Bummy', 'Pisca', 'Bumaro', 'FF'];
 
-// O colyseus 0.15 é CommonJS; carregamo-lo com require (mantendo os tipos).
 const require = createRequire(import.meta.url);
 const { Room } = require('colyseus') as typeof import('colyseus');
 
-// Persistência partilhada (injetada no arranque). Só usada no modo ranked.
 let storage: Storage | null = null;
 export function setStorage(s: Storage) {
   storage = s;
@@ -44,9 +45,8 @@ export function setStorage(s: Storage) {
 interface LobbyHuman {
   sessionId: string;
   name: string;
-  userId: number | null; // só em ranked
+  userId: number | null;
 }
-
 interface AuthData {
   userId: number;
   username: string;
@@ -66,9 +66,11 @@ export class SalemaRoom extends Room {
   private salemas: number[] = new Array(NUM_SEATS).fill(0);
   private moons: number[] = new Array(NUM_SEATS).fill(0);
   private paused = false;
-  private tainted = false; // ranked invalidado (ex.: alguém não voltou) -> não conta
+  private tainted = false;
   private recorded = false;
   private timer: ReturnType<typeof setTimeout> | null = null;
+  private turnTimer: ReturnType<typeof setTimeout> | null = null;
+  private turnEndsAt: number | null = null;
 
   private get requireAuth() {
     return this.mode === 'ranked';
@@ -85,13 +87,14 @@ export class SalemaRoom extends Room {
 
   onCreate(options: { mode?: GameMode }) {
     this.mode = options?.mode === 'ranked' ? 'ranked' : 'casual';
+    this.setMetadata({ hostName: '', mode: this.mode, started: false });
     this.onMessage('start', (client) => this.startGame(client));
     this.onMessage('play', (client, msg: { cardId: string }) =>
       this.handlePlay(client, msg?.cardId),
     );
+    this.onMessage('chat', (client, msg: { text?: string }) => this.handleChat(client, msg));
   }
 
-  // No ranked, exige sessão iniciada (token válido). No casual, entra à vontade.
   onAuth(_client: Client, options: { token?: string }): AuthData | boolean {
     if (!this.requireAuth) return true;
     const payload = options?.token ? verifyToken(options.token) : null;
@@ -121,10 +124,12 @@ export class SalemaRoom extends Room {
     }
 
     this.lobby.push({ sessionId: client.sessionId, name, userId });
+    if (this.lobby.length === 1) {
+      this.setMetadata({ hostName: name, mode: this.mode, started: false });
+    }
     if (this.lobby.length >= NUM_SEATS) this.lock();
     this.broadcastLobby();
 
-    // No ranked começa automaticamente quando estiverem os 5.
     if (this.requireAuth && this.lobby.length === NUM_SEATS) {
       this.beginMatch();
     }
@@ -139,24 +144,35 @@ export class SalemaRoom extends Room {
     const seat = this.seatSession.indexOf(client.sessionId);
     if (seat < 0) return;
 
-    // No ranked, dá-se uma hipótese de reentrar antes de desistir do lugar.
-    if (this.mode === 'ranked' && !consented) {
-      this.seatConnected[seat] = false;
-      this.broadcastState();
-      try {
-        await this.allowReconnection(client, RECONNECT_SECONDS);
-        this.seatConnected[seat] = true; // voltou
-        this.broadcastState();
-        return;
-      } catch {
-        // não voltou a tempo: a partida deixa de contar e um bot acaba o jogo
-        this.tainted = true;
-      }
+    // Saída intencional (clicou em sair): o lugar passa a bot.
+    if (consented) {
+      this.dropSeatToBot(seat);
+      return;
     }
 
+    // Queda de ligação: janela para voltar à MESMA sala. Entretanto um bot cobre.
+    this.seatConnected[seat] = false;
+    this.broadcastState();
+    if (this.match?.phase === 'playing' && this.match.currentPlayer === seat) {
+      this.scheduleNext(false);
+    }
+    try {
+      await this.allowReconnection(client, RECONNECT_SECONDS);
+      this.seatConnected[seat] = true; // voltou e recupera o lugar
+      this.broadcastState();
+      if (this.match?.phase === 'playing' && this.match.currentPlayer === seat) {
+        this.scheduleNext(false); // reinicia o relógio da vez para o humano
+      }
+    } catch {
+      this.dropSeatToBot(seat);
+    }
+  }
+
+  private dropSeatToBot(seat: number) {
     this.seatConnected[seat] = false;
     this.seatIsBot[seat] = true;
     this.seatSession[seat] = null;
+    if (this.recordStats) this.tainted = true; // ranked deixa de contar
     this.broadcastState();
     if (this.match?.phase === 'playing' && this.match.currentPlayer === seat) {
       this.scheduleNext(false);
@@ -165,6 +181,20 @@ export class SalemaRoom extends Room {
 
   onDispose() {
     this.clearTimer();
+    this.clearTurnTimer();
+  }
+
+  // ----------------------------------------------------------------- chat ---
+
+  private handleChat(client: Client, msg: { text?: string }) {
+    const text = (msg?.text ?? '').toString().replace(/\s+/g, ' ').trim().slice(0, 200);
+    if (!text) return;
+    const seat = this.seatSession.indexOf(client.sessionId);
+    const lobbyName = this.lobby.find((h) => h.sessionId === client.sessionId)?.name;
+    const from =
+      seat >= 0 && this.match ? this.match.players[seat] : lobbyName || 'Alguém';
+    const payload: ChatPayload = { from, seat: seat >= 0 ? seat : -1, text, ts: Date.now() };
+    this.broadcast('chat', payload);
   }
 
   // ---------------------------------------------------------------- lobby ---
@@ -190,8 +220,7 @@ export class SalemaRoom extends Room {
   }
 
   private startGame(client: Client) {
-    // No ranked é automático; ignoramos pedidos manuais.
-    if (this.mode === 'ranked') return;
+    if (this.mode === 'ranked') return; // ranked começa automaticamente
     if (!this.lobby.some((h) => h.sessionId === client.sessionId)) return;
     if (!this.canStart()) return;
     this.beginMatch();
@@ -224,6 +253,7 @@ export class SalemaRoom extends Room {
 
     this.match = createMatch(players);
     this.started = true;
+    this.setMetadata({ hostName: this.metadata?.hostName || humanNames[0] || '', mode: this.mode, started: true });
     this.lock();
     this.broadcastState();
     this.scheduleNext(false);
@@ -250,11 +280,12 @@ export class SalemaRoom extends Room {
 
   private applyMove(card: Card) {
     if (!this.match) return;
+    this.clearTurnTimer();
+    this.turnEndsAt = null;
     const before = this.match.completedTricks.length;
     this.match = playCard(this.match, card);
     const justCompleted = this.match.completedTricks.length > before;
 
-    // Quando uma mão acaba de ser pontuada, acumulamos Salemas e luas.
     if (this.match.phase === 'handComplete' || this.match.phase === 'matchComplete') {
       this.accumulateHandStats();
     }
@@ -319,6 +350,8 @@ export class SalemaRoom extends Room {
   }
 
   private proceed() {
+    this.clearTurnTimer();
+    this.turnEndsAt = null;
     if (!this.match) return;
     const m = this.match;
 
@@ -335,12 +368,38 @@ export class SalemaRoom extends Room {
     }
 
     const cur = m.currentPlayer;
+    const isOpening = m.trickNumber === 1 && m.currentTrick.length === 0;
+
+    // #4: abertura forçada com o 2 de Paus — joga sozinha (humano ou bot).
+    if (isOpening) {
+      this.timer = setTimeout(() => {
+        if (this.match && this.match.phase === 'playing') {
+          const legal = getLegalMoves(this.match);
+          if (legal.length) this.applyMove(legal[0]);
+        }
+      }, OPENING_DELAY_MS);
+      return;
+    }
+
+    // Bot ou lugar desligado: joga o bot.
     if (this.seatIsBot[cur] || !this.seatConnected[cur]) {
       this.timer = setTimeout(() => {
         if (this.match && this.match.phase === 'playing') {
           this.applyMove(chooseBotMove(this.match));
         }
       }, BOT_DELAY_MS);
+      return;
+    }
+
+    // Humano ligado: no Ranked há 10s para jogar (#2). Senão, espera sem limite.
+    if (this.recordStats) {
+      this.turnEndsAt = Date.now() + TURN_LIMIT_MS;
+      this.turnTimer = setTimeout(() => {
+        if (this.match && this.match.phase === 'playing' && this.match.currentPlayer === cur) {
+          this.applyMove(chooseBotMove(this.match)); // tempo esgotado: joga por ele
+        }
+      }, TURN_LIMIT_MS);
+      this.broadcastState(); // empurra o turnEndsAt para o cliente mostrar a contagem
     }
   }
 
@@ -348,6 +407,12 @@ export class SalemaRoom extends Room {
     if (this.timer) {
       clearTimeout(this.timer);
       this.timer = null;
+    }
+  }
+  private clearTurnTimer() {
+    if (this.turnTimer) {
+      clearTimeout(this.turnTimer);
+      this.turnTimer = null;
     }
   }
 
@@ -400,6 +465,7 @@ export class SalemaRoom extends Room {
       handNumber: m.handNumber,
       trickNumber: m.trickNumber,
       paused: this.paused,
+      turnEndsAt: this.turnEndsAt,
       lastHandResult: m.lastHandResult
         ? {
             appliedPoints: m.lastHandResult.appliedPoints,

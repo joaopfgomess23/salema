@@ -702,3 +702,125 @@ body {
 .rank__me { background: rgba(217, 164, 65, 0.14); }
 .rank__me td { color: var(--gold); font-weight: 600; }
 .rank__note { color: var(--muted); font-size: 0.78rem; margin: 12px 0 4px; line-height: 1.4; }
+
+/* ===================== Funcionalidades online: salas, chat, relógio ======== */
+
+/* Botões pequenos */
+.btn--sm {
+  padding: 7px 14px;
+  font-size: 0.85rem;
+  border-radius: 9px;
+}
+
+/* Lista de salas (#6) */
+.rooms__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 16px 0 6px;
+  color: var(--gold);
+  font-size: 0.82rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+.rooms__list { list-style: none; margin: 0 0 10px; padding: 0; display: grid; gap: 8px; }
+.roomrow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(217, 164, 65, 0.18);
+}
+.roomrow__name { flex: 1; color: var(--text); }
+.roomrow__count { color: var(--muted); font-variant-numeric: tabular-nums; }
+
+/* Relógio de jogada (#2, ranked) */
+.turnclock {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 40;
+  padding: 7px 16px;
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--text);
+  background: rgba(8, 23, 18, 0.85);
+  border: 1px solid rgba(217, 164, 65, 0.3);
+  backdrop-filter: blur(4px);
+}
+.turnclock--you { color: #081712; background: var(--gold); border-color: var(--gold); font-weight: 600; }
+.turnclock--low { border-color: var(--red); color: #fff; background: rgba(178, 49, 48, 0.92); }
+.turnclock--you.turnclock--low { background: var(--red); }
+
+/* Chat (#5) */
+.chat__fab {
+  position: fixed;
+  right: 14px;
+  bottom: 14px;
+  z-index: 45;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  font-size: 1.3rem;
+  cursor: pointer;
+  color: var(--text);
+  background: rgba(8, 23, 18, 0.9);
+  border: 1px solid rgba(217, 164, 65, 0.35);
+}
+.chat__badge {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+  min-width: 19px;
+  height: 19px;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--red);
+  color: #fff;
+  font-size: 0.7rem;
+  line-height: 19px;
+  text-align: center;
+}
+.chat {
+  position: fixed;
+  right: 14px;
+  bottom: 14px;
+  z-index: 46;
+  width: min(330px, calc(100vw - 28px));
+  height: min(420px, 70vh);
+  display: flex;
+  flex-direction: column;
+  border-radius: 14px;
+  overflow: hidden;
+  background: rgba(8, 23, 18, 0.95);
+  border: 1px solid rgba(217, 164, 65, 0.3);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5);
+}
+.chat__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  color: var(--gold);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.chat__close { color: var(--muted); cursor: pointer; background: none; border: none; font-size: 1rem; }
+.chat__body { flex: 1; overflow-y: auto; padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; }
+.chat__empty { color: var(--muted); text-align: center; margin-top: 20px; }
+.chat__msg { color: var(--text); font-size: 0.9rem; line-height: 1.35; word-break: break-word; }
+.chat__msg--me { text-align: right; }
+.chat__from { color: var(--gold); font-weight: 600; margin-right: 4px; }
+.chat__msg--me .chat__from { color: #7fd6a8; }
+.chat__input { display: flex; gap: 6px; padding: 10px; border-top: 1px solid rgba(255, 255, 255, 0.08); }
+.chat__input input {
+  flex: 1;
+  padding: 9px 11px;
+  border-radius: 9px;
+  background: rgba(0, 0, 0, 0.35);
+  color: var(--text);
+  border: 1px solid rgba(217, 164, 65, 0.25);
+}

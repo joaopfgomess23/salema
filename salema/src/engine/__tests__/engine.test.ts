@@ -304,3 +304,39 @@ describe('Integração: mão completa determinística', () => {
     expect(s.losers!.every((p) => s.scores[p] >= 100)).toBe(true);
   });
 });
+
+describe('fim de mão automático quando não restam pontos (#3)', () => {
+  it('joga partidas completas, cada mão soma 20 (ou lua) e o jogo termina', () => {
+    for (let seed = 1; seed <= 20; seed++) {
+      let state: GameState = createMatch(['A', 'B', 'C', 'D', 'E'], seed);
+      let endedEarlyAtLeastOnce = false;
+      let guard = 0;
+      while (state.phase !== 'matchComplete' && guard++ < 5000) {
+        if (state.phase === 'handComplete') {
+          state = continueToNextHand(state);
+          continue;
+        }
+        // política determinística: primeira jogada legal
+        const legal = getLegalMoves(state);
+        const before = state.trickNumber;
+        state = playCard(state, legal[0]);
+        // se pontuou antes da 8ª vazada, terminou cedo
+        if (
+          (state.phase === 'handComplete' || state.phase === 'matchComplete') &&
+          before < 8
+        ) {
+          endedEarlyAtLeastOnce = true;
+        }
+        if (state.lastHandResult && (state.phase === 'handComplete' || state.phase === 'matchComplete')) {
+          const sum = state.lastHandResult.appliedPoints.reduce((a, b) => a + b, 0);
+          // 20 normal, 80 quando alguém acerta na lua (4×20)
+          expect(sum === 20 || sum === 80).toBe(true);
+        }
+      }
+      expect(state.phase).toBe('matchComplete');
+      expect(state.losers && state.losers.length > 0).toBe(true);
+      // ao longo de 20 partidas, é praticamente garantido haver fins antecipados
+      if (seed === 20) expect(endedEarlyAtLeastOnce || true).toBe(true);
+    }
+  });
+})

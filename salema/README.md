@@ -36,6 +36,16 @@ todos os que tiverem 100 ou mais**.
 - **Persistência atrás de uma interface** (`server/storage/`) — adaptador **Postgres** (ex. Neon)
   em produção e **em memória** em desenvolvimento/testes. O servidor escolhe automaticamente
   conforme exista `DATABASE_URL`.
+- **Extras online:**
+  - **Salas com nome** — ao escolher Casual/Ranked vês a lista de salas abertas e podes **criar a
+    tua** ("Lobby do *teu-nome*") ou entrar noutra com um clique (sem palavras-passe).
+  - **Reconexão** — se a ligação cair (ou deres *refresh*), voltas à **mesma** partida durante ~60s;
+    entretanto um bot cobre o teu lugar e tu recuperá-lo quando voltas.
+  - **Chat** no lobby e na mesa.
+  - **Relógio de 10s por jogada no Ranked** — se esgotar, o servidor joga uma carta legal por ti.
+  - **Abertura automática** com o 2 de Paus e **fecho automático da mão** quando já não há pontos
+    em jogo.
+  - No Casual com sessão iniciada, usa-se automaticamente o nome da conta (não pede nome).
 
 > **Modo offline:** joga-se tudo no dispositivo e **nunca** conta para estatísticas.
 

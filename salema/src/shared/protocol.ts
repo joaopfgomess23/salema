@@ -65,6 +65,7 @@ export interface GameView {
   handNumber: number;
   trickNumber: number;
   paused: boolean; // servidor em pausa curta a mostrar a vazada ganha
+  turnEndsAt: number | null; // ranked: instante-limite (epoch ms) para a jogada atual
   lastHandResult: HandResultView | null;
   losers: number[] | null;
 }
@@ -76,7 +77,26 @@ export interface ErrorView {
 
 export type ServerMessage = LobbyView | GameView | ErrorView;
 
+/** Mensagem de chat difundida pelo servidor (canal 'chat'). */
+export interface ChatPayload {
+  from: string;
+  seat: number; // assento de quem enviou (-1 se indeterminado)
+  text: string;
+  ts: number;
+}
+
+/** Metadados de uma sala, para a lista de salas abertas (#6). */
+export interface RoomMeta {
+  hostName: string;
+  mode: GameMode;
+  started: boolean;
+}
+
 // Mensagens do cliente para o servidor
 export interface PlayMessage {
   cardId: string;
+}
+
+export interface ChatMessage {
+  text: string;
 }
