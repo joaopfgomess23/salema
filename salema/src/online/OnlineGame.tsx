@@ -141,7 +141,7 @@ function RoomsScreen({
               className="setup__input"
               value={name}
               maxLength={16}
-              placeholder="Ex.: Leca"
+              placeholder="Ex.: Bummy"
               onChange={(e) => setName(e.target.value)}
             />
           </>

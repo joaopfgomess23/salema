@@ -33,7 +33,7 @@ export function OnlineHome({
               {stats && stats.gamesPlayed > 0 && (
                 <p className="account__stats">
                   {stats.gamesPlayed} jogos · {stats.gamesPlayed - stats.defeats} vitórias ·{' '}
-                  {stats.salemas} salemas · {stats.moons} luas
+                  {stats.salemas} salemas · {stats.moons} 20s
                 </p>
               )}
               {stats && stats.gamesPlayed === 0 && (

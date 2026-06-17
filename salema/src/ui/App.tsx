@@ -73,7 +73,7 @@ function Setup({ onStart, onBack }: { onStart: (you: string) => void; onBack: ()
           className="setup__input"
           value={name}
           maxLength={16}
-          placeholder="Ex.: Leca"
+          placeholder="Ex.: Bummy"
           onChange={(e) => setName(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter' && trimmed) onStart(trimmed); }}
           autoFocus

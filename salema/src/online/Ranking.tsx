@@ -62,7 +62,7 @@ export function Ranking({
                   <th>Derrotas</th>
                   <th>Méd. pts</th>
                   <th title="Damas de espadas (Salemas) apanhadas">Salemas</th>
-                  <th title="Luas acertadas">Luas</th>
+                  <th title="Luas acertadas">20s</th>
                 </tr>
               </thead>
               <tbody>
