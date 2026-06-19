@@ -353,6 +353,16 @@ export class SalemaRoom extends Room {
     this.clearTurnTimer();
     this.turnEndsAt = null;
     if (!this.match) return;
+
+    // Prosseguir significa que já não estamos na pausa de fim de vazada. Se uma
+    // queda/reconexão interrompeu a pausa (cancelando o temporizador que a
+    // levantaria), é AQUI que a levantamos — senão o jogo ficava preso com
+    // paused=true e ninguém conseguia jogar.
+    if (this.paused) {
+      this.paused = false;
+      this.broadcastState();
+    }
+
     const m = this.match;
 
     if (m.phase === 'matchComplete') return;
