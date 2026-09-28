@@ -3,14 +3,15 @@ import { GameTable } from './GameTable';
 import { useGame } from './useGame';
 import { OnlineGame } from '../online/OnlineGame';
 import { hasPendingReconnect } from '../online/useOnlineGame';
-
-const BOT_NAMES = ['Bummy', 'Pisca', 'Bumaro', 'FF'];
+import { pickBots } from '../bots/roster';
+import type { BotProfile } from '../bots/smartBot';
 
 type Screen = 'menu' | 'offline' | 'online';
 
 export function App() {
   const [screen, setScreen] = useState<Screen>(() => (hasPendingReconnect() ? 'online' : 'menu'));
   const [names, setNames] = useState<string[] | null>(null);
+  const [bots, setBots] = useState<BotProfile[] | null>(null);
 
   // Se ficou uma partida a meio (queda/refresh), entra logo no Online para retomar.
   useEffect(() => {
@@ -22,10 +23,26 @@ export function App() {
   }
 
   if (screen === 'offline') {
-    if (!names) {
-      return <Setup onStart={(you) => setNames([you, ...BOT_NAMES])} onBack={() => setScreen('menu')} />;
+    if (!names || !bots) {
+      return (
+        <Setup
+          onStart={(you) => {
+            // Sorteia 4 bots diferentes; mantêm-se até ao fim do jogo.
+            const picked = pickBots(4);
+            setBots(picked);
+            setNames([you, ...picked.map((b) => b.name)]);
+          }}
+          onBack={() => setScreen('menu')}
+        />
+      );
     }
-    return <Game names={names} onQuit={() => { setNames(null); setScreen('menu'); }} />;
+    return (
+      <Game
+        names={names}
+        bots={bots}
+        onQuit={() => { setNames(null); setBots(null); setScreen('menu'); }}
+      />
+    );
   }
 
   return <Menu onOffline={() => setScreen('offline')} onOnline={() => setScreen('online')} />;
@@ -87,8 +104,8 @@ function Setup({ onStart, onBack }: { onStart: (you: string) => void; onBack: ()
   );
 }
 
-function Game({ names, onQuit }: { names: string[]; onQuit: () => void }) {
-  const game = useGame(names);
+function Game({ names, bots, onQuit }: { names: string[]; bots: BotProfile[]; onQuit: () => void }) {
+  const game = useGame(names, bots);
   return (
     <>
       <button className="quit" onClick={onQuit} title="Sair">✕</button>

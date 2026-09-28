@@ -8,7 +8,7 @@ import {
   legalMoveIds,
   cardId,
 } from '../engine';
-import { chooseBotMove } from '../bots/simpleBot';
+import { chooseSmartBotMove, BotProfile } from '../bots/smartBot';
 
 export const HUMAN = 0;
 const BOT_DELAY_MS = 750; // pausa para o humano ver a jogada do bot
@@ -35,7 +35,8 @@ export interface UseGame {
   restart: () => void;
 }
 
-export function useGame(playerNames: string[]): UseGame {
+/** `bots[i]` é o perfil do lugar i + 1 (o lugar 0 é o humano). */
+export function useGame(playerNames: string[], bots: BotProfile[]): UseGame {
   const [state, setState] = useState<GameState>(() => createMatch(playerNames));
   const [waiting, setWaiting] = useState(false);
   const [peeking, setPeeking] = useState(false);
@@ -106,11 +107,11 @@ export function useGame(playerNames: string[]): UseGame {
     const t = setTimeout(() => {
       setState((prev) => {
         if (prev.phase !== 'playing' || prev.currentPlayer === HUMAN) return prev;
-        return playCard(prev, chooseBotMove(prev));
+        return playCard(prev, chooseSmartBotMove(prev, bots[prev.currentPlayer - 1]));
       });
     }, BOT_DELAY_MS);
     return () => clearTimeout(t);
-  }, [state, waiting, peeking]);
+  }, [state, waiting, peeking, bots]);
 
   const isHumanTurn =
     state.phase === 'playing' && state.currentPlayer === HUMAN && !waiting && !peeking;
