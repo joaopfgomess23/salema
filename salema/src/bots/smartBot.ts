@@ -71,7 +71,6 @@ const HEART_DUMP_VALUE = 0.6; // valor esperado (em pontos) de uma Copa largada 
 
 const strength = (card: Card): number => STRENGTH[card.rank];
 const byStrength = (a: Card, b: Card): number => strength(a) - strength(b);
-const lowest = (cards: Card[]): Card => [...cards].sort(byStrength)[0];
 const highest = (cards: Card[]): Card => [...cards].sort(byStrength).at(-1)!;
 
 type Plays = GameState['currentTrick'];
